@@ -75,6 +75,6 @@ def get_product_by_id(product_id: str = Path(
 
 @app.post("/products", status_code=201)
 def create_product(product: Product):
-    return product        
+    return product.model_dump(mode="json")        
     
 
