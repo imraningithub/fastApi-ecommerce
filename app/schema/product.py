@@ -66,7 +66,7 @@ class Product(BaseModel):
     ]
     image_urls: Annotated[
         List[AnyUrl],
-        Field(max_length=1, description="At least 1 image url"),
+        Field(min_length=1, description="At least 1 image url"),
     ]
 
     class Dimemsion(BaseModel):
@@ -103,7 +103,7 @@ class Product(BaseModel):
 
     seller: Seller
     created_at: datetime
-    dimension: Dimemsion
+
 
     @field_validator('sku', mode="after")
     @classmethod
@@ -125,6 +125,7 @@ class Product(BaseModel):
 
         if model.discount_percent > 0 and model.rating == 0:
             raise ValueError("Discount cannot be applied to a product with no rating")
+        return model    
 
     @computed_field
     @property

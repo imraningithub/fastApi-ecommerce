@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException, Query, Path
-from service.products import get_all_products
+from service.products import get_all_products, add_product, delete_product, update_product
 from schema.product import Product
+from uuid import uuid4, UUID
+from datetime import datetime
 
 app = FastAPI()
 
@@ -68,6 +70,20 @@ def get_product_by_id(product_id: str = Path(
     raise HTTPException(status_code=404, detail="Product not found")
 
 
+@app.delete("/products/{product_id}")
+def delete_product_by_id(product_id: UUID = Path(
+    ...,
+    description="Product UUID",
+    example= "UUID"
+)):
+    try:
+        res = delete_product(str(product_id))
+        return res
+
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))        
+
+
 
 
 
@@ -75,6 +91,34 @@ def get_product_by_id(product_id: str = Path(
 
 @app.post("/products", status_code=201)
 def create_product(product: Product):
-    return product.model_dump(mode="json")        
+    product_dict = product.model_dump(mode="json")
+    product_dict["id"] = str(uuid4())
+    product_dict["created_at"] = datetime.utcnow().isoformat() + "Z"
+
+    try:
+        add_product(product_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+    return product.model_dump(mode="json")
+
+
+# ✅ Route Handler for PUT /products/{product_id}
+@app.put("/products/{product_id}")
+def update_product_by_id(
+    payload: Product,
+    product_id: UUID = Path(..., description="Product UUID"),
+):
+    try:
+        updated = update_product(str(product_id), payload.model_dump(mode="json", exclude_unset=True))
+        return updated
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+  
+
+
+            
     
 
